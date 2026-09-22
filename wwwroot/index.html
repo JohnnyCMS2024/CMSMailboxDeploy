@@ -218,9 +218,15 @@
                 var card = document.createElement("div");
                 card.className = "itemCard";
                 if (item.ItemType === "IAFormRecord") {
-                    card.innerHTML = "<strong>" + escapeHtml(item.ItemLabel || "Form Application Record") + "</strong><div class='iaRecordArea' style='margin-top:8px'>Loading…</div>";
+                    // Full CMSNEO field-edit/read-only parity, not a flat read-only
+                    // table — rendered by CMSNEO's own ported InteractiveForm.js
+                    // inside ia-viewer.html, running against this app's own gated
+                    // backend (IaViewerController). See that file's comments.
+                    card.innerHTML = "<strong>" + escapeHtml(item.ItemLabel || "Form Application Record") + "</strong>" +
+                        "<iframe src='ia-viewer.html?messageItemId=" + item.MessageItemID + "' " +
+                        "style='width:100%;height:700px;border:1px solid #ccc;margin-top:8px' " +
+                        "title='" + escapeHtml(item.ItemLabel || "Form Application Record") + "'></iframe>";
                     itemsArea.appendChild(card);
-                    loadIAFormRecord(item.MessageItemID, card.querySelector(".iaRecordArea"));
                 } else {
                     var btn = document.createElement("button");
                     btn.innerText = "Download: " + (item.ItemLabel || item.ItemType);
@@ -229,27 +235,6 @@
                     itemsArea.appendChild(card);
                 }
             });
-        }
-
-        function loadIAFormRecord(messageItemId, container) {
-            api("/item/" + messageItemId)
-                .then(function (r) {
-                    if (!r.ok) throw new Error("denied");
-                    return r.json();
-                })
-                .then(function (bundle) {
-                    var formData = JSON.parse(bundle.formData);
-                    var html = "<table class='fieldTable'>";
-                    formData.forEach(function (row) {
-                        if (!row.FieldName) return;
-                        html += "<tr><td class='k'>" + escapeHtml(row.FieldName) + "</td><td>" + escapeHtml(row.Val || "") + "</td></tr>";
-                    });
-                    html += "</table>";
-                    container.innerHTML = html;
-                })
-                .catch(function () {
-                    container.innerHTML = "<span class='err'>You no longer have access to this record.</span>";
-                });
         }
 
         function downloadItem(messageItemId, label) {
