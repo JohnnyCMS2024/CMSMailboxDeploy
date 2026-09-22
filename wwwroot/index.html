@@ -142,6 +142,15 @@
             document.getElementById("loginScreen").style.display = "none";
             document.getElementById("appScreen").style.display = "block";
             loadInbox();
+
+            // Deep link from the share-notification email (?message=<id>) — open it
+            // once, then strip the query string so a page refresh doesn't re-trigger it.
+            var params = new URLSearchParams(window.location.search);
+            var deepLinkMessageId = params.get("message");
+            if (deepLinkMessageId) {
+                openMessage(parseInt(deepLinkMessageId));
+                window.history.replaceState({}, "", window.location.pathname);
+            }
         }
 
         function loadInbox() {
